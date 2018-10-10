@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8"/>
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
+    <link rel="stylesheet" type="text/css" href="css/pb.css"/>
+    <style type="text/css">
+        body {
+            margin: 30px;
+        }
+
+        #result {
+            padding: 15px;
+        }
+    </style>
+</head>
+
+<body>
+<!--输入框-->
+<input type="text" class="form-control" id="inputCtr" placeholder="请输入内容" style="width: 600px"> <br>
+<!--按钮组-->
+<div class="btn-group btn-group-lg" role="group">
+    <button type="button" class="btn btn-default" onclick="addGenesis()">添加封面</button>
+    <button type="button" class="btn btn-default" onclick="addNote()">添加记录</button>
+    <button type="button" class="btn btn-default" onclick="showlist()">展示数据</button>
+    <button type="button" class="btn btn-default" onclick="verify()">校验数据</button>
+</div>
+<!--用于展示结果-->
+<p class="bg-info" id="result">success</p>
+
+<table class="table">
+
+    <thead>
+    <tr>
+
+        <th>ID</th>
+        <th>内容</th>
+        <th>哈希值</th>
+    </tr>
+    </thead>
+    <tbody id="tagTbody">
+
+
+    </tbody>
+</table>
+
+<script src="js/jquery-1.12.4.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/pb.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/jsrsasign-all-min.js" type="text/javascript" charset="utf-8"></script>
+
+<script>
+    // 添加封面
+    function addGenesis() {
+        // 显示进度条
+        loading.baosight.showPageLoadingMsg(false)
+        // 用户输入的内容
+        var content = $("#inputCtr").val();
+        // 发起请求
+        $.post("/addGenesis", "genesis=" + content, function (data) {
+            //清空输入框
+            $("#inputCtr").val();
+            // 展示结果
+            $("#result").html(data)
+            // 隐藏进度条
+            loading.baosight.hidePageLoadingMsg()
+            // 查询最新的数据
+            showlist();
+        })
+    }
+
+    // 添加记录
+    function addNote() {
+        // 显示进度条
+        loading.baosight.showPageLoadingMsg(false)
+        // 用户输入的内容
+        var content = $("#inputCtr").val();
+        // 发起请求
+        $.post("/addNote", "note=" + content, function (data) {
+            //清空输入框
+            $("#inputCtr").val();
+            // 展示结果
+            $("#result").html(data)
+            // 隐藏进度条
+            loading.baosight.hidePageLoadingMsg()
+            // 查询最新的数据
+            showlist();
+        })
+    }
+
+    // 展示数据
+    function showlist() {
+        // 显示进度条
+        loading.baosight.showPageLoadingMsg(false)
+        // 发起请求
+        $.get("/showlist",
+            function (data) {
+                $("#tagTbody").html("")
+            for(var i = 0; i<data.length;i++){
+                var block = data[i];
+                var id = block.id;
+                var content = block.content;
+                var hash = block.hash;
+
+                $("#tagTbody").append("<tr><td>"+id+"</td><td>"+content+"</td><td>"+hash+"</td></tr>")
+            }
+            // 隐藏进度条
+            loading.baosight.hidePageLoadingMsg()
+        })
+    }
+
+    //校验逻辑
+    function verify() {
+        // 显示进度条
+        loading.baosight.showPageLoadingMsg(false)
+        // 发起请求
+        $.get("/verify",
+            function (data) {
+
+                    $("#result").html(data)
+
+                // 隐藏进度条
+                loading.baosight.hidePageLoadingMsg()
+            });
+    }
+
+    // 页面加载成功后,查询已有数据
+    $(function () {
+        showlist();
+    })
+</script>
+
+</body>
+
+</html>
