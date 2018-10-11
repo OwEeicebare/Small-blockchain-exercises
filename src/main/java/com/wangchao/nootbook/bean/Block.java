@@ -17,13 +17,19 @@ public class Block {
     public String content;
     //哈希值
     public String hash;
+    //工作量证明
+    public int nonce;
+    //之前区块的哈希值
+    public String preHash;
 
     public Block() {
     }
 
-    public Block(int id, String content, String hash) {
+    public Block(String preHash,int nonce,int id, String content, String hash) {
         this.id = id;
         this.content = content;
         this.hash = hash;
+        this.nonce = nonce;
+        this.preHash = preHash;
     }
 }

@@ -38,6 +38,8 @@
         <th>ID</th>
         <th>内容</th>
         <th>哈希值</th>
+        <th>工作量证明</th>
+        <th>上一个哈希值</th>
     </tr>
     </thead>
     <tbody id="tagTbody">
@@ -100,11 +102,14 @@
                 $("#tagTbody").html("")
             for(var i = 0; i<data.length;i++){
                 var block = data[i];
+                var nonce = block.nonce;
+                var preHash = block.preHash;
                 var id = block.id;
                 var content = block.content;
                 var hash = block.hash;
 
-                $("#tagTbody").append("<tr><td>"+id+"</td><td>"+content+"</td><td>"+hash+"</td></tr>")
+
+                $("#tagTbody").append("<tr><td>"+id+"</td><td>"+content+"</td><td>"+hash+"</td><td>"+nonce+"</td><td>"+preHash+"</td></tr>")
             }
             // 隐藏进度条
             loading.baosight.hidePageLoadingMsg()

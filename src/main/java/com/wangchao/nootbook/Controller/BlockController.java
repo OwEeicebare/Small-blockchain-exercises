@@ -5,8 +5,7 @@ import com.wangchao.nootbook.bean.NoteBook;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Auther:WangChao
@@ -45,7 +44,7 @@ public class BlockController {
 
     //展示入口返回这个数据的集合
     @GetMapping("/showlist")
-    public ArrayList<Block> showlist() throws InterruptedException {
+    public List<Block> showlist() throws InterruptedException {
 
         Thread.sleep(1000);
         return book.showlist();
