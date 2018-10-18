@@ -1,64 +1,142 @@
 package com.wangchao.nootbook.Controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangchao.nootbook.BlockchainApplication;
 import com.wangchao.nootbook.bean.Block;
+import com.wangchao.nootbook.ws.MyServer;
+import com.wangchao.nootbook.ws.MyClient;
+import com.wangchao.nootbook.bean.MessageBean;
 import com.wangchao.nootbook.bean.NoteBook;
+import com.wangchao.nootbook.bean.Transaction;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.PostConstruct;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
-/**
- * @Auther:WangChao
- * @ClassName:BlockController
- * @Date:Created in 2018/10/10 16:27
- * @Despriction:
- * @Modify By:
- */
+
 @RestController
 public class BlockController {
-    NoteBook book = new NoteBook();
 
-    //添加封面区块入口如果添加成功返回success失败则返回fail和失败原因
-    @PostMapping(("/addGenesis"))
-    public String addGenesis(String genesis){
+    private NoteBook notebook = NoteBook.getInstance();
+
+    @PostMapping("/addGenesis")
+    public String addGenesis(String genesis) {
+
         try {
-            book.addGenesis(genesis);
-            return "success";
+            notebook.addGenesis(genesis);
+            return "添加成功";
         } catch (Exception e) {
-            return "fail:" + e.getMessage();
+            e.printStackTrace();
+            return "添加失败:" + e.getMessage();
         }
-
     }
 
-    //添加封面区块入口如果添加成功返回success失败则返回fail和失败原因
-    @PostMapping(("/addNote"))
-    public String addNote(String note) {
+    // 如果Controller中的方法参数是对象类型,需要通过对象接收前台传递过来的数据,必须要保证对应的实体类要有getter和setter方法
+
+    @PostMapping("/addNote")
+    public String addNote(Transaction transaction) {
+
         try {
-            book.addNote(note);
-            return "success";
+
+            // 校验交易数据是否合法
+            if (transaction.verify()) {
+
+                // 包装数据
+                MessageBean bean = new MessageBean(4, transaction.getContent());
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                String msg = objectMapper.writeValueAsString(bean);
+
+                // 广播交易数据
+                server.broadcast(msg);
+
+                notebook.addNote(transaction.getContent());
+                return "添加成功";
+            } else {
+                return "数据校验失败";
+            }
+
         } catch (Exception e) {
-            return "fail:" + e.getMessage();
+            e.printStackTrace();
+            return "添加失败:" + e.getMessage();
         }
+    }
 
-       }
-
-    //展示入口返回这个数据的集合
     @GetMapping("/showlist")
     public List<Block> showlist() throws InterruptedException {
 
         Thread.sleep(1000);
-        return book.showlist();
+
+        return notebook.showlist();
     }
 
-    //校验功能
     @GetMapping("/verify")
     public String verify() {
-        //调用验证方法拿到拼接的字符串
-        String verify = book.verify();
-        //如果拿到的字符串没有有数据证明内容没有问题
-        if (org.springframework.util.StringUtils.isEmpty(verify)){
+
+        String verify = notebook.verify();
+
+        if (StringUtils.isEmpty(verify)) {
             return "数据没有问题";
         }
+
         return verify;
+    }
+
+    private HashSet<String> set = new HashSet<>();
+
+    // 注册节点
+    @RequestMapping("/regist")
+    public String regist(String port) {
+        set.add(port);
+        return "注册成功";
+    }
+
+    // 存放所有连接websocket服务端的客户端
+    private List<MyClient> clients = new ArrayList<>();
+
+
+    // 连接
+    @RequestMapping("/conn")
+    public String conn() throws Exception {
+        // 遍历本地存储的服务端地址,然后连接
+        for (String node : set) {
+            URI uri = new URI("ws://localhost:" + node);
+            MyClient client = new MyClient(uri, node);
+            client.connect();
+
+            clients.add(client);
+        }
+        return "连接成功";
+
+    }
+
+    private MyServer server;
+
+    // Controller创建后立刻调用该方法
+    @PostConstruct
+    public void init() {
+        // 将springboot启动的端口号+1,作为WebSocket服务端启动时使用的端口号
+        server = new MyServer(Integer.parseInt(BlockchainApplication.port) + 1);
+        server.start();
+    }
+
+    // 请求同步数据,
+    // 模拟场景 : 全新的一个节点上线了,但是没有区块链的数据,发送一个请求,要求获取其他节点上存储的区块链数据
+    @RequestMapping("/syncData")
+    public String syncData() {
+
+        for (MyClient client : clients) {
+            client.send("亲,把你的区块链数据给我一份");
+        }
+
+        return "连接成功";
+
     }
 }

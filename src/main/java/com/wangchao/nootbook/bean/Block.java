@@ -6,7 +6,7 @@ import lombok.Data;
  * @Auther:WangChao
  * @ClassName:Block
  * @Date:Created in 2018/10/10 17:05
- * @Despriction:
+ * @Despriction:区块bean类
  * @Modify By:
  */
 @Data

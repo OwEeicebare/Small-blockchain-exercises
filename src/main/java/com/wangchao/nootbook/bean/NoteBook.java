@@ -20,7 +20,20 @@ public class NoteBook {
 
 
     //用于保存数据的集合
-    private ArrayList<Block> list = new ArrayList<>();
+    private List<Block> list = new ArrayList<>();
+
+    private static volatile NoteBook instance;
+
+    // 单例模式
+    public static NoteBook getInstance() {
+        if (instance == null) {
+            synchronized (NoteBook.class) {
+                instance = new NoteBook();
+            }
+        }
+
+        return instance;
+    }
 
     //添加第一个区块
     public void addGenesis(String genesis){
@@ -177,13 +190,24 @@ public class NoteBook {
         return stringBuilder.toString();
     }
 
+
+    // 要去做数据的比对,然后判断是否接受对方传递过来的区块链数据
+    // 1.比对长度
+    // 2.数据校验
+    public void checkNewList(List<Block> newList) {
+
+        if (newList.size() > list.size()) {
+            list = newList;
+        }
+    }
     //挖矿逻辑
 
     private int mine(String content, String preHash) {
-
+        //加入循环最大值就是int型最大值
         for (int i = 0; i < Integer.MAX_VALUE; i++) {
-
+            //计算哈希值
             String hash = HashUtils.sha256(content + preHash + i);
+            //为增加挖矿难度只提取前面为4个0的哈希值
             if (hash.startsWith("0000")) {
                 System.out.println("挖矿成功:" + i);
                 return i;
